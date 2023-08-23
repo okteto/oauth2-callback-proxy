@@ -96,10 +96,12 @@ def login():
     state = base64.b64encode(json.dumps({"prd": PUBLIC_URL}).encode("utf-8"))
     params = [('state', state)]
     redirect_url = add_params_to_uri(OAUTH2_PROXY_URL, params)
+    print('redirecting request to proxy at ' + redirect_url)
     return redirect(redirect_url)
 
 @app.route("/oauth2/callback")
 def callback():
+    print('received request from proxy')
     state = request.args.get("state")
     if not state:
         return "empty state", 400

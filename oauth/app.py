@@ -24,6 +24,7 @@ GOOGLE_CLIENT_SECRET = os.environ.get("OAUTH2_CLIENT_SECRET", None)
 GOOGLE_DISCOVERY_URL = (
     "https://accounts.google.com/.well-known/openid-configuration"
 )
+
 PUBLIC_URL = os.environ.get("PUBLIC_URL", None)
 
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
@@ -31,6 +32,7 @@ app = Flask(__name__)
 
 @app.route("/oauth2")
 def login():
+    print('received login request')
     google_provider_cfg = requests.get(GOOGLE_DISCOVERY_URL).json()
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
     redirect_url=PUBLIC_URL
@@ -39,6 +41,9 @@ def login():
     if not state:
         return "empty state", 400
 
+    #decoded_state_json = json.loads(base64.b64decode(state))
+
+    #new_state = base64.b64encode(json.dumps({"prd": decoded_state_json}).encode("utf-8"))
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
         redirect_uri=redirect_url,
@@ -46,7 +51,7 @@ def login():
         state=state
     )
 
-    print("oauth2 - redirecting to " + request_uri + " with redirect_url " + redirect_url)
+    print("redirecting to " + request_uri + " with redirect_url " + redirect_url)
     return redirect(request_uri)
 
 @app.route("/oauth2/callback")
@@ -60,7 +65,6 @@ def callback():
         return "empty state", 400
 
     decoded_state_json = json.loads(base64.b64decode(state))
-    print(decoded_state_json)
 
     google_provider_cfg = requests.get(GOOGLE_DISCOVERY_URL).json()
     token_endpoint = google_provider_cfg["token_endpoint"]

@@ -4,9 +4,8 @@ services:
     ports:
       - 8080:8080
     environment:
-      - PUBLIC_URL=https://auth-${OKTETO_NAMESPACE}.${OKTETO_DOMAIN}/oauth2/callback
+      - PUBLIC_URL=https://vote-${OKTETO_NAMESPACE}.ramiro.okteto.dev/oauth2/callback
       - OAUTH2_PROXY_URL=$OAUTH2_PROXY_URL
-    command: python app.py
 
   redis:
     image: redis

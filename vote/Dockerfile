@@ -17,4 +17,4 @@ ADD . /src
 EXPOSE 8080
 
 # Define our command to be run when launching the container
-CMD ["python", "app.py"]
+CMD ["python", "-u", "app.py"]
