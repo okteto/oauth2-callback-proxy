@@ -1,0 +1,18 @@
+services:
+  vote:
+    build: .
+    ports:
+      - 8080:8080
+    environment:
+      - PUBLIC_URL=https://auth-${OKTETO_NAMESPACE}.${OKTETO_DOMAIN}/oauth2/callback
+      - OAUTH2_PROXY_URL=$OAUTH2_PROXY_URL
+    command: python app.py
+
+  redis:
+    image: redis
+    ports:
+      - 6379
+    volumes:
+      - redis:/data
+volumes:
+  redis:

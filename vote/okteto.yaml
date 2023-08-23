@@ -1,0 +1,11 @@
+deploy:
+  compose: docker-compose.yaml
+dev:
+  vote:
+    command: bash
+    workdir: /src
+    sync:
+    - .:/src
+    environment:
+     FLASK_ENV: "development"
+      

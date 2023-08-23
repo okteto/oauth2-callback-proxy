@@ -1,0 +1,10 @@
+services:
+  auth:
+    build: .
+    command: python app.py
+    ports:
+      - 8080:8080
+    environment:
+      - OAUTH2_CLIENT_ID=$OAUTH2_CLIENT_ID
+      - OAUTH2_CLIENT_SECRET=$OAUTH2_CLIENT_SECRET
+      - PUBLIC_URL=https://auth-${OKTETO_NAMESPACE}.${OKTETO_DOMAIN}/oauth2/callback
