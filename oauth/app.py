@@ -1,12 +1,4 @@
-from flask import Flask, render_template, request, make_response, jsonify, g, redirect, url_for
-from flask_login import (
-    LoginManager,
-    current_user,
-    login_required,
-    login_user,
-    logout_user,
-    UserMixin
-)
+from flask import Flask, request, g, redirect, url_for
 from oauthlib.oauth2 import WebApplicationClient
 from oauthlib.common import add_params_to_uri
 
@@ -21,9 +13,9 @@ import base64
 
 GOOGLE_CLIENT_ID = os.environ.get("OAUTH2_CLIENT_ID", None)
 GOOGLE_CLIENT_SECRET = os.environ.get("OAUTH2_CLIENT_SECRET", None)
-GOOGLE_DISCOVERY_URL = (
-    "https://accounts.google.com/.well-known/openid-configuration"
-)
+GOOGLE_AUTHORIZATION_ENDPOINT="https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
+GOOGLE_USERINFO_ENDPOINT= "https://openidconnect.googleapis.com/v1/userinfo"
 
 PUBLIC_URL = os.environ.get("PUBLIC_URL", None)
 
@@ -33,19 +25,14 @@ app = Flask(__name__)
 @app.route("/oauth2")
 def login():
     print('received login request')
-    google_provider_cfg = requests.get(GOOGLE_DISCOVERY_URL).json()
-    authorization_endpoint = google_provider_cfg["authorization_endpoint"]
     redirect_url=PUBLIC_URL
 
     state = request.args.get("state")
     if not state:
         return "empty state", 400
 
-    #decoded_state_json = json.loads(base64.b64decode(state))
-
-    #new_state = base64.b64encode(json.dumps({"prd": decoded_state_json}).encode("utf-8"))
     request_uri = client.prepare_request_uri(
-        authorization_endpoint,
+        GOOGLE_AUTHORIZATION_ENDPOINT,
         redirect_uri=redirect_url,
         scope=["openid", "email", "profile"],
         state=state
@@ -66,15 +53,13 @@ def callback():
 
     decoded_state_json = json.loads(base64.b64decode(state))
 
-    google_provider_cfg = requests.get(GOOGLE_DISCOVERY_URL).json()
-    token_endpoint = google_provider_cfg["token_endpoint"]
-
     token_url, headers, body = client.prepare_token_request(
-    token_endpoint,
-    authorization_response=request_url,
-    redirect_url=request_base_url,
-    code=code
+        GOOGLE_TOKEN_ENDPOINT,
+        authorization_response=request_url,
+        redirect_url=request_base_url,
+        code=code
     )
+
     token_response = requests.post(
         token_url,
         headers=headers,
@@ -84,8 +69,7 @@ def callback():
 
     # Parse the tokens!
     client.parse_request_body_response(json.dumps(token_response.json()))
-    userinfo_endpoint = google_provider_cfg["userinfo_endpoint"]
-    uri, headers, body = client.add_token(userinfo_endpoint)
+    uri, headers, body = client.add_token(GOOGLE_USERINFO_ENDPOINT)
     userinfo_response = requests.get(uri, headers=headers, data=body)
     if userinfo_response.json().get("email_verified"):
         unique_id = userinfo_response.json()["sub"]
@@ -101,6 +85,7 @@ def callback():
     user = dict(id_=unique_id, name=users_name, email=users_email, profile_pic=picture)
     state = base64.b64encode(json.dumps(user).encode("utf-8"))
     
+    # This is not secure. A production proxy should pass this information via a database or another secure mechanism. This is only for demo purposes.
     params = [('state', state)]
     redirect_url_with_state = add_params_to_uri(redirect_url, params)
     return redirect(redirect_url_with_state)

@@ -27,4 +27,4 @@ This is an example of how to use an OAuth2 Callback Proxy to reuse the same Goog
 
         cd vote
         okteto deploy -n=<namespace>
-1. Access the application using the https endpoint that Okteto created for you
+1. Access the application using the https endpoint that Okteto created for you. You'll be prompted to authenticate using your google account before being able to cast your vote.
